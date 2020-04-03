@@ -76,6 +76,8 @@ print(" "*10 + "Ethereum is currently worth " + Ethereum_price() + " (USD)")
 
 # Weather forecast
 
+# Dinner idea: recent PuL recipe. 
+
 
 print(" ")
 print(x + y*169 + x)
