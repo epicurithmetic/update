@@ -175,13 +175,95 @@ print("\n")
 
 print("\n")
 # Music updates bandcamp pages
-# Ultimae, Synphaera, Carbon Based Lifeforms, White Label Records, 1631 Recordings
+print(" "*5 + "Latest releases from your favourite record labels and artists: \n")
+
+
+arist_list = ["Ultimae",
+              "Synphaera",
+              "Exosphere",
+              "White Label Records",
+              "Carbon Based Lifeforms",
+              "Hydrangea",
+              "Abul Mogard",
+              "Faint",
+              "Solar Fields",
+              "Trentemoller",
+              "Alfa Mist"]
+
+def bandcamp_latest_release(url):
+
+    url_artist_discog = url
+    response_artist_discog = requests.get(url_artist_discog)
+    soup_artist_discog = BeautifulSoup(response_artist_discog.text, "html.parser")
+
+    data_artist_discog = soup_artist_discog.find("p", class_="title")
+    newest_artist_discog = data_artist_discog.text
+
+    return newest_artist_discog
+
+# Create a list of URL to loop-through:
+bandcamp_list = ["https://ultimae.bandcamp.com/",
+                 "https://synphaera.bandcamp.com/",
+                 "https://exospheremusic.bandcamp.com/",
+                 "https://whitelabrecs.bandcamp.com/music",
+                 "https://carbonbasedlifeforms.bandcamp.com/music",
+                 "https://hydrangea.bandcamp.com/",
+                 "https://abulmogard.bandcamp.com/",
+                 "https://faintmusic.bandcamp.com/",
+                 "https://solarfields.bandcamp.com/",
+                 "https://trentemoller.bandcamp.com/",
+                 "https://alfamist.bandcamp.com/music"]
+
+# This function cleans the format of the scraped release_title.
+def release_name_clean(raw_release_name):
+
+    """
+        This function cleans the release name.
+
+        When I scrape the release name, there is often a lot of
+        extra text in the string. For example, the artist name
+        and a lot of spaces and new line commands.
+
+    """
+
+    # First remove any newline commands.
+    raw_release_name = raw_release_name.replace("\n","")
+
+    # Get rid of the arist name by splitting by a fixed number of spaces.
+    split_release_name = raw_release_name.split("              ",1)
+
+    # Get rid of the spaces at the beginning of the release name.
+    release_name_string = split_release_name[0]
+    release_name_list = list(release_name_string)
+    while release_name_list[0] == " ":
+        del release_name_list[0]
+    # Remove spaces from the start of the release name.
+
+    clean_release_name = ""
+    for a in release_name_list:
+        clean_release_name += a
+
+    return clean_release_name
+
+# Store all the titles in a list.
+newest_releases = []
+for url in bandcamp_list:
+    raw_release_title = bandcamp_latest_release(url)
+    clean_release_title = release_name_clean(raw_release_title)
+    newest_releases.append(clean_release_title)
+
+# For now I can just print the releases.
+for i in range(0,10):
+    print(" "*10 + arist_list[i] +": " + newest_releases[i])
+
+# In the future I should store them and then say whether or not the release
+# is new! 
 
 print("\n")
 # Merriam-Webster word of the day
 #print("Today's word of the day is: " + MW_WotD)
 
-print("\n")
+#print("\n")
 # Dinner idea: recent PuL recipe.
 
 
@@ -194,5 +276,37 @@ print(x + y*169 + x)
 # RNZ stories could be provided: perhaps particular sections could be
 # asked for i.e. just the In Depth section.
 
+# Open all RNZ stories the user wants to read.
+rnz_reading = True
+while rnz_reading == True:
 
-#webbrowser.open(quanta_stories[0][1]) - This works, after uninstalling Internet Explorer.
+    print("Would you like to read any of the RNZ stories? [Y/n]")
+    user_rnzreading = input("")
+    if user_rnzreading == "Y":
+        print("Which story would you like to read? [1-10]")
+        user_rnzstory = input("")
+        user_rnzstory = int(user_rnzstory)
+        story_url_read = rnz_stories[user_rnzstory - 1][1]
+        webbrowser.open(story_url_read)
+    else:
+        rnz_reading = False
+
+# Open all Quanta stories the user wants to read.
+quanta_reading = True
+while quanta_reading == True:
+
+    print("Would you like to read any of the stories from Quanta Magazine? [Y/n]")
+    user_quantareading = input("")
+    if user_quantareading == "Y":
+        print("Which story would you like to read? [1-10]")
+        user_quantastory = input("")
+        user_quantastory = int(user_quantastory)
+        story_url_read = quanta_stories[user_quantastory - 1][1]
+        webbrowser.open(story_url_read)
+    else:
+        quanta_reading = False
+
+
+
+# Close.
+print("\n" + " "*10 + "Now you are all up to date. Enjoy your day." + "\n\n")
