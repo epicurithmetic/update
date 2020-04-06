@@ -15,10 +15,11 @@ os.system("cls")
 
 # Some simple graphics to frame the update.
 x = "|||"
-y = "-"
-
-print(x + y*169 + x)
-print(x + y*169 + x)
+y = "-"                     # This could be decorated more with some simple
+                            # cellular automata. Using a RNG we could provide
+                            # a new graphic with each update.
+print(x + y*169 + x)        # Take from a list of "interesting rules" a random
+print(x + y*169 + x)        # rule to make things different each time. 
 
 # Print the time
 print("Date: " + local_time)
