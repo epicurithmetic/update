@@ -24,6 +24,17 @@ print(x + y*169 + x)
 print("Date: " + local_time)
 print(" ")
 
+# Reminders
+print(" "*55 + x + y*50 + x)
+print("\n" +  " "*60 + "Reminders: \n")
+
+print(" "*70 + "1. Neck and back stretches")
+print(" "*70 + "2. Meditation with Sam Harris")
+print(" "*70 + "3. Two hours of coding")
+
+print("\n")
+print(" "*55 + x + y*50 + x)
+print("\n")
 # Greeting
 print("Greetings Robert. \n")
 print("Your requested updates are as follows: \n")
@@ -130,53 +141,12 @@ for story in quanta_stories:
     print(" "*10 + str(i) + ". " + story[0])
     i += 1
 
-print("\n")
-# Cryptocurrency prices
-print(" "*5 + "Cryptocurrency summary: \n")
-
-def BitCoin_price():
-
-    # We will obtain the price from the following website.
-    url_bitcoin = "https://coinmarketcap.com/currencies/bitcoin/markets/"
-
-    # First for BitCoin.
-    response_bitcoin = requests.get(url_bitcoin)
-    soup_bitcoin = BeautifulSoup(response_bitcoin.text, "html.parser")
-
-    # For BitCoin.
-    data_bitcoin = soup_bitcoin.find("span", class_="cmc-details-panel-price__price")
-    price_bitcoin = data_bitcoin.text
-
-    return price_bitcoin
-def Ethereum_price():
-
-    # We will obtain the price from the following website.
-    url_ethereum = "https://coinmarketcap.com/currencies/ethereum/"
-
-    # HTML for Ethereum.
-    response_ethereum = requests.get(url_ethereum)
-    soup_ethereum = BeautifulSoup(response_ethereum.text, "html.parser")
-
-    # For Ethereum.
-    data_ethereum = soup_ethereum.find("span", class_="cmc-details-panel-price__price")
-    price_ethereum = data_ethereum.text
-
-    return price_ethereum
-
-print(" "*10 + "BitCoin  is currently worth " + BitCoin_price() + " (USD)")
-print(" "*10 + "Ethereum is currently worth " + Ethereum_price() + " (USD)")
-
-print("\n")
-# NZX prices
-print(" "*5 + "New Zealand Stock-Exchange summary: \n")
-
-print("\n")
+#print("\n")
 # Weather forecast
 
 print("\n")
 # Music updates bandcamp pages
 print(" "*5 + "Latest releases from your favourite record labels and artists: \n")
-
 
 arist_list = ["Ultimae",
               "Synphaera",
@@ -189,6 +159,20 @@ arist_list = ["Ultimae",
               "Solar Fields",
               "Trentemoller",
               "Alfa Mist"]
+
+# Read in the data from the last time we checked.
+N = len(arist_list)
+bandcamp_old_release_data = []
+bandcamp_database = open("bandcamp_database.txt","r")
+
+for i in range(0,N):
+    data = bandcamp_database.readline()
+    data_list = data.split(":& ")
+    release_name = data_list[1].replace("\n","")    # Cleans the EOL command.
+    bandcamp_old_release_data.append(release_name)
+
+# Close the file.
+bandcamp_database.close()
 
 def bandcamp_latest_release(url):
 
@@ -252,22 +236,78 @@ for url in bandcamp_list:
     clean_release_title = release_name_clean(raw_release_title)
     newest_releases.append(clean_release_title)
 
-# For now I can just print the releases.
-for i in range(0,10):
-    print(" "*10 + arist_list[i] +": " + newest_releases[i])
+# Print the most recent release titles. If a title has changed since the last
+# update, then indicate this with a [New!] printed next to the title.
+for i in range(0,N):
 
-# In the future I should store them and then say whether or not the release
-# is new! 
+    if newest_releases[i] == bandcamp_old_release_data[i]:
+        print(" "*10 + arist_list[i] +": " + newest_releases[i])
+    else:
+        print(" "*10 + arist_list[i] +": " + newest_releases[i] + " [New!]")
+        print(newest_releases[i])
+        print(bandcamp_old_release_data[i])
+
+# Now we can update the database with the new release information.
+file = open("bandcamp_database.txt","w")
+for i in range(0,N):
+    if i == 0:
+        new_data = arist_list[i] + ":& " + newest_releases[i]
+        file.write(new_data)
+    else:
+        new_data = "\n" + arist_list[i] + ":& " + newest_releases[i]
+        file.write(new_data)
+
+file.close()
 
 print("\n")
 # Merriam-Webster word of the day
-#print("Today's word of the day is: " + MW_WotD)
+
+#print("\n")
+# Friends ArXiv updates. Jim, Simon, Ryan, Andrew, James Bonifacio. Semirings.
 
 #print("\n")
 # Dinner idea: recent PuL recipe.
 
-
-print(" ")
+# Cryptocurrency prices
+# print(" "*5 + "Cryptocurrency summary: \n")
+#
+# def BitCoin_price():
+#
+#     # We will obtain the price from the following website.
+#     url_bitcoin = "https://coinmarketcap.com/currencies/bitcoin/markets/"
+#
+#     # First for BitCoin.
+#     response_bitcoin = requests.get(url_bitcoin)
+#     soup_bitcoin = BeautifulSoup(response_bitcoin.text, "html.parser")
+#
+#     # For BitCoin.
+#     data_bitcoin = soup_bitcoin.find("span", class_="cmc-details-panel-price__price")
+#     price_bitcoin = data_bitcoin.text
+#
+#     return price_bitcoin
+# def Ethereum_price():
+#
+#     # We will obtain the price from the following website.
+#     url_ethereum = "https://coinmarketcap.com/currencies/ethereum/"
+#
+#     # HTML for Ethereum.
+#     response_ethereum = requests.get(url_ethereum)
+#     soup_ethereum = BeautifulSoup(response_ethereum.text, "html.parser")
+#
+#     # For Ethereum.
+#     data_ethereum = soup_ethereum.find("span", class_="cmc-details-panel-price__price")
+#     price_ethereum = data_ethereum.text
+#
+#     return price_ethereum
+#
+# print(" "*10 + "BitCoin  is currently worth " + BitCoin_price() + " (USD)")
+# print(" "*10 + "Ethereum is currently worth " + Ethereum_price() + " (USD)")
+#
+# print("\n")
+# # NZX prices
+# print(" "*5 + "New Zealand Stock-Exchange summary: \n")
+#
+# print(" ")
 print(x + y*169 + x)
 print(x + y*169 + x)
 
