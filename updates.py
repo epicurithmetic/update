@@ -19,7 +19,7 @@ y = "-"                     # This could be decorated more with some simple
                             # cellular automata. Using a RNG we could provide
                             # a new graphic with each update.
 print(x + y*169 + x)        # Take from a list of "interesting rules" a random
-print(x + y*169 + x)        # rule to make things different each time. 
+print(x + y*169 + x)        # rule to make things different each time.
 
 # Print the time
 print("Date: " + local_time)
@@ -245,8 +245,6 @@ for i in range(0,N):
         print(" "*10 + arist_list[i] +": " + newest_releases[i])
     else:
         print(" "*10 + arist_list[i] +": " + newest_releases[i] + " [New!]")
-        print(newest_releases[i])
-        print(bandcamp_old_release_data[i])
 
 # Now we can update the database with the new release information.
 file = open("bandcamp_database.txt","w")
@@ -316,6 +314,9 @@ print(x + y*169 + x)
 # any of the stories they would like to read. Furthermore, a full list of
 # RNZ stories could be provided: perhaps particular sections could be
 # asked for i.e. just the In Depth section.
+
+# In order to be 100% advertisement free, I should print the body of the stories
+# in the terminal, rather than jumping to the webpage. 
 
 # Open all RNZ stories the user wants to read.
 rnz_reading = True
