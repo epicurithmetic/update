@@ -41,6 +41,50 @@ print("Greetings Robert. \n")
 print("Your requested updates are as follows: \n")
 
 
+print(" "*5 + "His Holiness, Jung, and Mythology: \n")
+
+def HHtDL():
+
+    url_HHtDL = "https://www.dalailama.com/"
+    response_HHtDL = requests.get(url_HHtDL)
+    soup_HHtDL = BeautifulSoup(response_HHtDL.text, "html.parser")
+
+    latest_entry_title = soup_HHtDL.find("h2").text
+    latest_entry_url = url_HHtDL[:-1] + soup_HHtDL.find("a",class_="button gold")["href"]
+
+    return [latest_entry_title,latest_entry_url]
+
+def jungianthology():
+
+    url_jung = "https://jungchicago.org/blog/category/blog-posts/"
+    response_jung = requests.get(url_jung)
+    soup_jung = BeautifulSoup(response_jung.text, "html.parser")
+
+    data_jung = soup_jung.find("h2",class_="excerpt-title")
+    data_jung_finer = data_jung.find("a")
+
+    title_blog = data_jung_finer.text
+    url_blog = data_jung_finer["href"]
+
+    return [title_blog, url_blog]
+
+def myth_matters():
+
+    url_mm = "https://mythologymatters.wordpress.com/"
+    response_mm = requests.get(url_mm)
+    soup_mm = BeautifulSoup(response_mm.text,"html.parser")
+
+    data_mm = soup_mm.find("h2",class_="entry-title")
+    data_mm_finer = data_mm.find("a")
+
+    title_blog = data_mm_finer.text
+    url_blog = data_mm_finer["href"]
+
+    return [title_blog, url_blog]
+
+
+
+print("\n")
 # RNZ headlines
 print(" "*5 + "Radio New Zealand headlines: \n  ")
 def RNZHeadlines():
@@ -258,8 +302,147 @@ for i in range(0,N):
 
 file.close()
 
+#print("\n")
+# Merriam-Webster word of the day.
+
+
 print("\n")
-# Merriam-Webster word of the day
+# Blog updates.
+
+blogs = ["Joel David Hampkins", "Matt Baker", "Godel's Lost Letter", "Annoying Precision", "Full Stack Python"]
+
+number_of_blogs = len(blogs)
+# First we write some function to grab the latest post each of the blogs.
+
+# Joel David Hampkins: Mathematics and Philosophy of the infinite.
+def jdh_headline():
+
+    url_jdh = "http://jdh.hamkins.org/"
+    response_jdh = requests.get(url_jdh)
+    soup_jdh = BeautifulSoup(response_jdh.text, "html.parser")
+
+    main_jdh = soup_jdh.find("h1", class_="entry-title")
+    title_jdh = main_jdh.text
+
+    return title_jdh
+
+# Matt Baker's blog.
+def baker_headline():
+
+    url_baker = "https://mattbaker.blog/"
+    response_baker = requests.get(url_baker)
+    soup_baker = BeautifulSoup(response_baker.text, "html.parser")
+
+    main_baker = soup_baker.find("h1", class_="entry-title")
+    title_baker = main_baker.text
+
+    return title_baker
+
+# # Logic Matters
+# def logic_matters():
+#
+#     url_logic = "https://www.logicmatters.net/blogfront/"
+#     response_logic = requests.get(url_logic)
+#     soup_logic = BeautifulSoup(response_logic.text, "html.parser")
+#
+#     main_logic = soup_logic.find("h1", class_="entry-title")
+#     title_logic = main_logic.text
+#
+#     return title_logic
+
+# Godels lost letter
+def godel_letter():
+
+    url_godel = "https://rjlipton.wordpress.com/"
+    response_godel = requests.get(url_godel)
+    soup_godel = BeautifulSoup(response_godel.text, "html.parser")
+
+    # First pick out the section containing recent post.
+    section_godel = soup_godel.find("div", id = "content", class_="pad")
+
+    # Now pick out the title part of the HTML.
+    main_godel = section_godel.find("h2")
+    title_godel = main_godel.text
+
+    return title_godel
+
+# Annoying Precision
+def annoying_precision():
+
+    url_annoying_precision = "https://qchu.wordpress.com/"
+    response_annoying_precision = requests.get(url_annoying_precision)
+    soup_annoying_precision = BeautifulSoup(response_annoying_precision.text, "html.parser")
+
+    # First pick out the section containing recent post.
+    section_annoying_precision = soup_annoying_precision.find("div", class_="posttitle")
+
+    # Now pick out the title part of the HTML.
+    main_annoying_precision = section_annoying_precision.find("h2")
+    title_annoying_precision = main_annoying_precision.text
+
+    return title_annoying_precision
+
+# Full stack python (blog)
+def fullstack_python():
+
+    url_python = "https://www.fullstackpython.com/blog.html"
+    response_python = requests.get(url_python)
+    soup_python = BeautifulSoup(response_python.text, "html.parser")
+
+    # Zero in on the information.
+    section_python = soup_python.find("div", class_="c9")
+
+    blog_link = url_python + section_python.find("a")["href"]
+    blog_title = section_python.find("a").text
+
+    return blog_title
+
+# These functions get the most recent blog titles.
+blogs_functions = [jdh_headline(), baker_headline(),godel_letter(),annoying_precision(),fullstack_python()]
+
+# Get the latest blog titles.
+new_blogs = []
+for blog in blogs_functions:
+    new_blogs.append(blog)
+
+# Read in the data from the last time we checked the blog.
+blogs_in_database = []
+blog_database = open("blog_database.txt","r")
+for i in range(0,number_of_blogs):
+    data = blog_database.readline()
+    data_list = data.split(":& ")
+    blog_title = data_list[1].replace("\n","")  # Clean EOL command.
+    blogs_in_database.append(blog_title)
+
+# Close the file.
+blog_database.close()
+
+# Print the latest blog titles. If they are different from the last check, then
+# print a [New!] with the title name.
+print(" "*5 + "Latest entries of your favourite blogs: \n")
+for i in range(0,number_of_blogs):
+
+    if new_blogs[i] == blogs_in_database[i]:
+        print(" "*10 + blogs[i] + ": " + new_blogs[i])
+    else:
+        print(" "*10 + blogs[i] + ": " + new_blogs[i] + " [New!]")
+
+# Now we can update the database with the new release information.
+file = open("blog_database.txt","w")
+for i in range(0,number_of_blogs):
+    if i == 0:
+        new_data = blogs[i] + ":& " + new_blogs[i]
+        file.write(new_data)
+    else:
+        new_data = "\n" + blogs[i] + ":& " + new_blogs[i]
+        file.write(new_data)
+
+file.close()
+
+
+
+
+
 
 #print("\n")
 # Friends ArXiv updates. Jim, Simon, Ryan, Andrew, James Bonifacio. Semirings.
@@ -306,7 +489,7 @@ print("\n")
 # # NZX prices
 # print(" "*5 + "New Zealand Stock-Exchange summary: \n")
 #
-# print(" ")
+print("\n")
 print(x + y*169 + x)
 print(x + y*169 + x)
 
@@ -316,8 +499,9 @@ print(x + y*169 + x)
 # asked for i.e. just the In Depth section.
 
 # In order to be 100% advertisement free, I should print the body of the stories
-# in the terminal, rather than jumping to the webpage. 
+# in the terminal, rather than jumping to the webpage.
 
+"\n"
 # Open all RNZ stories the user wants to read.
 rnz_reading = True
 while rnz_reading == True:
