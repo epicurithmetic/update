@@ -45,12 +45,17 @@ print(" "*5 + "His Holiness, Jung, and Mythology: \n")
 
 def HHtDL():
 
-    url_HHtDL = "https://www.dalailama.com/"
+    url_HHtDL = "https://www.dalailama.com/news"
     response_HHtDL = requests.get(url_HHtDL)
     soup_HHtDL = BeautifulSoup(response_HHtDL.text, "html.parser")
 
-    latest_entry_title = soup_HHtDL.find("h2").text
-    latest_entry_url = url_HHtDL[:-1] + soup_HHtDL.find("a",class_="button gold")["href"]
+    latest_entry_section = soup_HHtDL.find("div", class_="card")
+    latest_entry_subsection = latest_entry_section.find("h3")
+
+    latest_entry_url_section = latest_entry_subsection.find("a")
+    latest_entry_url = latest_entry_url_section['href']
+    latest_entry_title = latest_entry_subsection.text
+
 
     return [latest_entry_title,latest_entry_url]
 
@@ -82,7 +87,11 @@ def myth_matters():
 
     return [title_blog, url_blog]
 
-
+newest_blogs = [["His Holiness the Dalai Lama", HHtDL()],["Jungianthology", jungianthology()],["Myth Matters", myth_matters()]]
+blog_count = 1
+for blog in newest_blogs:
+    print(" "*10 + str(blog_count) + ". " + blog[0] + ": " + blog[1][0])
+    blog_count += 1
 
 print("\n")
 # RNZ headlines
@@ -419,7 +428,7 @@ blog_database.close()
 
 # Print the latest blog titles. If they are different from the last check, then
 # print a [New!] with the title name.
-print(" "*5 + "Latest entries of your favourite blogs: \n")
+print(" "*5 + "Latest entries from your favourite mathematics and science blogs: \n")
 for i in range(0,number_of_blogs):
 
     if new_blogs[i] == blogs_in_database[i]:
@@ -532,7 +541,19 @@ while quanta_reading == True:
     else:
         quanta_reading = False
 
-
+# Open any of the blogs about spirituality and mythology.
+spirit_reading = True
+while spirit_reading == True:
+    print("Would you like to read any of the spiritual blogs? [Y/n]")
+    user_spirit = input("")
+    if user_spirit == "Y":
+        print("Which blog entry would you like to read? [1-3]")
+        user_spirit_blog = input("")
+        user_spirit_blog = int(user_spirit_blog)
+        url_spirit_blog = newest_blogs[user_spirit_blog-1][1][1]
+        webbrowser.open(url_spirit_blog)
+    else:
+        spirit_reading = False
 
 # Close.
-print("\n" + " "*10 + "Now you are all up to date. Enjoy your day." + "\n\n")
+print("\n" + " "*10 + "Now you are all up to date." + "\n\n")
