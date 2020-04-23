@@ -200,9 +200,11 @@ for story in quanta_stories:
 
 print("\n")
 # Music updates bandcamp pages
-print(" "*5 + "Latest releases from your favourite record labels and artists: \n")
+bandcamp_intro = "Latest releases from your favourite record labels and artists:"
+orbmag_intro = "Latest podcast and articles on Orbmag:"
+print(" "*5 + bandcamp_intro + " "*18 + orbmag_intro + "\n")
 
-arist_list = ["Ultimae",
+artist_list = ["Ultimae",
               "Synphaera",
               "Exosphere",
               "White Label Records",
@@ -215,7 +217,7 @@ arist_list = ["Ultimae",
               "Alfa Mist"]
 
 # Read in the data from the last time we checked.
-N = len(arist_list)
+N = len(artist_list)
 bandcamp_old_release_data = []
 bandcamp_database = open("bandcamp_database.txt","r")
 
@@ -267,7 +269,7 @@ def release_name_clean(raw_release_name):
     # First remove any newline commands.
     raw_release_name = raw_release_name.replace("\n","")
 
-    # Get rid of the arist name by splitting by a fixed number of spaces.
+    # Get rid of the artist name by splitting by a fixed number of spaces.
     split_release_name = raw_release_name.split("              ",1)
 
     # Get rid of the spaces at the beginning of the release name.
@@ -290,23 +292,94 @@ for url in bandcamp_list:
     clean_release_title = release_name_clean(raw_release_title)
     newest_releases.append(clean_release_title)
 
+# I want to print the ambient blog and orbmag beside bandcamp list.
+def ambient_blog():
+
+    url_ambient = "https://www.ambientblog.net/blog/"
+    response_ambient = requests.get(url_ambient)
+    soup_ambient = BeautifulSoup(response_ambient.text, "html.parser")
+
+    title_section = soup_ambient.find_all("h2", class_="entry-title", itemprop = "headline")
+
+    blog_entry_data = []
+
+    for entry in title_section:
+        entry_info = entry.find("a")
+        entry_title = entry_info.text
+        entry_url = entry_info["href"]
+
+        blog_entry = [entry_title,entry_url]
+        blog_entry_data.append(blog_entry)
+
+    return blog_entry_data
+
+def orbmag_podcast():
+
+    url_orbcast = "https://www.orbmag.com/music/"
+    response_orbcast = requests.get(url_orbcast)
+    soup_orbcast = BeautifulSoup(response_orbcast.text, "html.parser")
+
+    title_section = soup_orbcast.find("h3")
+    orbcast_title = title_section.find("a").text
+    orbcast_url = title_section.find("a")["href"]
+
+    return [orbcast_title,orbcast_url]
+
+def orbmag_news():
+
+    url_orbnews = "https://www.orbmag.com/news/"
+    response_orbnews = requests.get(url_orbnews)
+    soup_orbnews = BeautifulSoup(response_orbnews.text, "html.parser")
+
+    # Single out all of the new stories on the (first) news page.
+    articles_orbnews = soup_orbnews.find_all("article")
+
+    # I don't want updates about "EVENTS". I only want "NEWS" articles.
+    articles_just_orbnews = []
+    for story in articles_orbnews:
+        story_type = story.find("a").text
+        if story_type ==  "News":
+            articles_just_orbnews.append(story)
+        else:
+            pass
+
+    # Store the articles I am interested in here.
+    article_data = []
+
+    # For each "NEWS" story I need to go ahead and get the title and URL.
+    for story in articles_just_orbnews:
+        story_data = story.find("h3").find("a")
+        # Grab the relevant data.
+        story_url = story_data["href"]
+        story_title = story_data.text
+        # Append the data to the list.
+        article_data.append([story_title,story_url])
+
+    return article_data
+
+
+orbmag_data = [orbmag_podcast()] + orbmag_news()
+while len(orbmag_data) < N:
+    orbmag_data += [[""],[""]]
 # Print the most recent release titles. If a title has changed since the last
 # update, then indicate this with a [New!] printed next to the title.
 for i in range(0,N):
 
     if newest_releases[i] == bandcamp_old_release_data[i]:
-        print(" "*10 + arist_list[i] +": " + newest_releases[i])
+        l_bandcamp = len(artist_list[i] + ": "+ newest_releases[i])
+        print(" "*10 + artist_list[i] +": " + newest_releases[i] + " "*(80 - l_bandcamp) + orbmag_data[i][0])
     else:
-        print(" "*10 + arist_list[i] +": " + newest_releases[i] + " [New!]")
+        l_bandcamp = len(artist_list[i] + ": "+ newest_releases[i] + " [New!]")
+        print(" "*10 + artist_list[i] +": " + newest_releases[i] + " [New!]" + " "*(80 - l_bandcamp) + orbmag_data[i][0])
 
 # Now we can update the database with the new release information.
 file = open("bandcamp_database.txt","w")
 for i in range(0,N):
     if i == 0:
-        new_data = arist_list[i] + ":& " + newest_releases[i]
+        new_data = artist_list[i] + ":& " + newest_releases[i]
         file.write(new_data)
     else:
-        new_data = "\n" + arist_list[i] + ":& " + newest_releases[i]
+        new_data = "\n" + artist_list[i] + ":& " + newest_releases[i]
         file.write(new_data)
 
 file.close()
@@ -318,10 +391,24 @@ file.close()
 print("\n")
 # Blog updates.
 
-blogs = ["Joel David Hampkins", "Matt Baker", "Godel's Lost Letter", "Annoying Precision", "Full Stack Python"]
+blogs = ["Stephen Wolfram", "Joel David Hampkins", "Matt Baker", "Godel's Lost Letter", "Annoying Precision", "Full Stack Python"]
 
 number_of_blogs = len(blogs)
 # First we write some function to grab the latest post each of the blogs.
+
+# Stephen Wolfram's *writings* blog.
+def wolfram_writings():
+
+    url_wolf = "https://writings.stephenwolfram.com/"
+    response_wolf = requests.get(url_wolf)
+    soup_wolf = BeautifulSoup(response_wolf.text, "html.parser")
+
+    latest_article_data = soup_wolf.find("article").find("a")
+
+    article_title = latest_article_data.text
+    article_url = latest_article_data["href"]
+
+    return [article_title,article_url]
 
 # Joel David Hampkins: Mathematics and Philosophy of the infinite.
 def jdh_headline():
@@ -332,8 +419,9 @@ def jdh_headline():
 
     main_jdh = soup_jdh.find("h1", class_="entry-title")
     title_jdh = main_jdh.text
+    url_blog = main_jdh.find("a")["href"]
 
-    return title_jdh
+    return [title_jdh, url_blog]
 
 # Matt Baker's blog.
 def baker_headline():
@@ -343,9 +431,10 @@ def baker_headline():
     soup_baker = BeautifulSoup(response_baker.text, "html.parser")
 
     main_baker = soup_baker.find("h1", class_="entry-title")
-    title_baker = main_baker.text
+    title_baker = main_baker.a.text
+    article_url = main_baker.a["href"]
 
-    return title_baker
+    return [title_baker, article_url]
 
 # # Logic Matters
 # def logic_matters():
@@ -372,8 +461,9 @@ def godel_letter():
     # Now pick out the title part of the HTML.
     main_godel = section_godel.find("h2")
     title_godel = main_godel.text
+    article_url = main_godel.find("a")["href"]
 
-    return title_godel
+    return [title_godel,article_url]
 
 # Annoying Precision
 def annoying_precision():
@@ -388,8 +478,9 @@ def annoying_precision():
     # Now pick out the title part of the HTML.
     main_annoying_precision = section_annoying_precision.find("h2")
     title_annoying_precision = main_annoying_precision.text
+    article_url = main_annoying_precision.find("a")["href"]
 
-    return title_annoying_precision
+    return [title_annoying_precision,article_url]
 
 # Full stack python (blog)
 def fullstack_python():
@@ -404,10 +495,10 @@ def fullstack_python():
     blog_link = url_python + section_python.find("a")["href"]
     blog_title = section_python.find("a").text
 
-    return blog_title
+    return [blog_title, blog_link]
 
 # These functions get the most recent blog titles.
-blogs_functions = [jdh_headline(), baker_headline(),godel_letter(),annoying_precision(),fullstack_python()]
+blogs_functions = [wolfram_writings(), jdh_headline(), baker_headline(),godel_letter(),annoying_precision(),fullstack_python()]
 
 # Get the latest blog titles.
 new_blogs = []
@@ -430,74 +521,23 @@ blog_database.close()
 # print a [New!] with the title name.
 print(" "*5 + "Latest entries from your favourite mathematics and science blogs: \n")
 for i in range(0,number_of_blogs):
-
-    if new_blogs[i] == blogs_in_database[i]:
-        print(" "*10 + blogs[i] + ": " + new_blogs[i])
+    if new_blogs[i][0] == blogs_in_database[i]:
+        print(" "*10 + str(i+1) + ". " + blogs[i] + ": " + new_blogs[i][0])
     else:
-        print(" "*10 + blogs[i] + ": " + new_blogs[i] + " [New!]")
+        print(" "*10 + str(i+1) + ". " + blogs[i] + ": " + new_blogs[i][0] + " [New!]")
 
 # Now we can update the database with the new release information.
 file = open("blog_database.txt","w")
 for i in range(0,number_of_blogs):
     if i == 0:
-        new_data = blogs[i] + ":& " + new_blogs[i]
+        new_data = blogs[i] + ":& " + new_blogs[i][0]
         file.write(new_data)
     else:
-        new_data = "\n" + blogs[i] + ":& " + new_blogs[i]
+        new_data = "\n" + blogs[i] + ":& " + new_blogs[i][0]
         file.write(new_data)
 
 file.close()
 
-
-
-
-
-
-#print("\n")
-# Friends ArXiv updates. Jim, Simon, Ryan, Andrew, James Bonifacio. Semirings.
-
-#print("\n")
-# Dinner idea: recent PuL recipe.
-
-# Cryptocurrency prices
-# print(" "*5 + "Cryptocurrency summary: \n")
-#
-# def BitCoin_price():
-#
-#     # We will obtain the price from the following website.
-#     url_bitcoin = "https://coinmarketcap.com/currencies/bitcoin/markets/"
-#
-#     # First for BitCoin.
-#     response_bitcoin = requests.get(url_bitcoin)
-#     soup_bitcoin = BeautifulSoup(response_bitcoin.text, "html.parser")
-#
-#     # For BitCoin.
-#     data_bitcoin = soup_bitcoin.find("span", class_="cmc-details-panel-price__price")
-#     price_bitcoin = data_bitcoin.text
-#
-#     return price_bitcoin
-# def Ethereum_price():
-#
-#     # We will obtain the price from the following website.
-#     url_ethereum = "https://coinmarketcap.com/currencies/ethereum/"
-#
-#     # HTML for Ethereum.
-#     response_ethereum = requests.get(url_ethereum)
-#     soup_ethereum = BeautifulSoup(response_ethereum.text, "html.parser")
-#
-#     # For Ethereum.
-#     data_ethereum = soup_ethereum.find("span", class_="cmc-details-panel-price__price")
-#     price_ethereum = data_ethereum.text
-#
-#     return price_ethereum
-#
-# print(" "*10 + "BitCoin  is currently worth " + BitCoin_price() + " (USD)")
-# print(" "*10 + "Ethereum is currently worth " + Ethereum_price() + " (USD)")
-#
-# print("\n")
-# # NZX prices
-# print(" "*5 + "New Zealand Stock-Exchange summary: \n")
-#
 print("\n")
 print(x + y*169 + x)
 print(x + y*169 + x)
@@ -511,6 +551,20 @@ print(x + y*169 + x)
 # in the terminal, rather than jumping to the webpage.
 
 "\n"
+# Open any of the blogs about spirituality and mythology.
+spirit_reading = True
+while spirit_reading == True:
+    print("Would you like to read any of the spiritual blogs? [Y/n]")
+    user_spirit = input("")
+    if user_spirit == "Y":
+        print("Which blog entry would you like to read? [1-3]")
+        user_spirit_blog = input("")
+        user_spirit_blog = int(user_spirit_blog)
+        url_spirit_blog = newest_blogs[user_spirit_blog-1][1][1]
+        webbrowser.open(url_spirit_blog)
+    else:
+        spirit_reading = False
+
 # Open all RNZ stories the user wants to read.
 rnz_reading = True
 while rnz_reading == True:
@@ -541,19 +595,20 @@ while quanta_reading == True:
     else:
         quanta_reading = False
 
-# Open any of the blogs about spirituality and mythology.
-spirit_reading = True
-while spirit_reading == True:
-    print("Would you like to read any of the spiritual blogs? [Y/n]")
-    user_spirit = input("")
-    if user_spirit == "Y":
-        print("Which blog entry would you like to read? [1-3]")
-        user_spirit_blog = input("")
-        user_spirit_blog = int(user_spirit_blog)
-        url_spirit_blog = newest_blogs[user_spirit_blog-1][1][1]
-        webbrowser.open(url_spirit_blog)
+# Open all blogs that the use wants to read.
+blog_reading = True
+while blog_reading == True:
+
+    print("Would you like to read any of the blog entries? [Y/n]")
+    user_blogreading = input("")
+    if user_blogreading == "Y":
+        print("Which story would you like to read? [1-%d]" % number_of_blogs)
+        user_blog = input("")
+        user_blog = int(user_blog)
+        blog_url_read = new_blogs[user_blog-1][1]
+        webbrowser.open(blog_url_read)
     else:
-        spirit_reading = False
+        blog_reading = False
 
 # Close.
 print("\n" + " "*10 + "Now you are all up to date." + "\n\n")
