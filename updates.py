@@ -132,7 +132,6 @@ while count_rnz < 10:
     print(" "*10 + str(count_rnz + 1) + ". " + rnz_stories[count_rnz][0])
     count_rnz += 1
 
-
 print("\n")
 # Quanta stories
 print(" "*5 + "Quanta Magazine headlines: \n  ")
@@ -188,15 +187,11 @@ def QuantaHeadlines():
 
     return headlines
 
-
 quanta_stories = QuantaHeadlines()
 i = 1
 for story in quanta_stories:
     print(" "*10 + str(i) + ". " + story[0])
     i += 1
-
-#print("\n")
-# Weather forecast
 
 print("\n")
 # Music updates bandcamp pages
@@ -356,7 +351,6 @@ def orbmag_news():
         article_data.append([story_title,story_url])
 
     return article_data
-
 
 orbmag_data = [orbmag_podcast()] + orbmag_news()
 while len(orbmag_data) < N:
@@ -551,64 +545,54 @@ print(x + y*169 + x)
 # in the terminal, rather than jumping to the webpage.
 
 "\n"
-# Open any of the blogs about spirituality and mythology.
-spirit_reading = True
-while spirit_reading == True:
-    print("Would you like to read any of the spiritual blogs? [Y/n]")
-    user_spirit = input("")
-    if user_spirit == "Y":
-        print("Which blog entry would you like to read? [1-3]")
-        user_spirit_blog = input("")
-        user_spirit_blog = int(user_spirit_blog)
-        url_spirit_blog = newest_blogs[user_spirit_blog-1][1][1]
-        webbrowser.open(url_spirit_blog)
+# Store blog commands in a list
+reading_commands = ["Would you like to read any of the spiritual blogs? [Y/n]",
+                    "Would you like to read any of the RNZ stories? [Y/n]",
+                    "Would you like to read any of the stories from Quanta Magazine? [Y/n]",
+                    "Would you like to read any of the blog entries? [Y/n]"]
+
+article_numbers = ["[1-3]","[1-10]","[1-10]",("[1-%d]" % number_of_blogs)]
+
+blog_url_lists = [newest_blogs,rnz_stories,quanta_stories,new_blogs]
+length_blog_list = len(blog_url_lists)
+
+section_counter = 0
+while section_counter < length_blog_list:
+
+    # Ask the user if they would like to read any of the articles.
+    print(reading_commands[section_counter])
+
+    # Receive the user input.
+    reading_yn = input("")
+
+    # Act accordingly
+    if reading_yn == "Y":
+
+        # Ask which stories the user wants to read.
+        stories = input("Enter the numbers corresponding to the stories you want to read seperated by commas: ")
+        stories = stories.split(",")
+
+        # Get all url for the current section.
+        current_section_urls = []
+
+        # Obtain the list of urls for the user.
+        if section_counter == 0:
+            # In this case we are getting the spiritual blogs.
+            for blog in newest_blogs:
+                current_section_urls.append(blog[1][1])
+        else:
+            # This case covers the format of the information obtained from
+            # the remaining websites.
+            for blog in blog_url_lists[section_counter]:
+                current_section_urls.append(blog[1])
+
+        # Open the stories in a browser.
+        for x in stories:
+            webbrowser.open(current_section_urls[int(x)-1])
     else:
-        spirit_reading = False
-
-# Open all RNZ stories the user wants to read.
-rnz_reading = True
-while rnz_reading == True:
-
-    print("Would you like to read any of the RNZ stories? [Y/n]")
-    user_rnzreading = input("")
-    if user_rnzreading == "Y":
-        print("Which story would you like to read? [1-10]")
-        user_rnzstory = input("")
-        user_rnzstory = int(user_rnzstory)
-        story_url_read = rnz_stories[user_rnzstory - 1][1]
-        webbrowser.open(story_url_read)
-    else:
-        rnz_reading = False
-
-# Open all Quanta stories the user wants to read.
-quanta_reading = True
-while quanta_reading == True:
-
-    print("Would you like to read any of the stories from Quanta Magazine? [Y/n]")
-    user_quantareading = input("")
-    if user_quantareading == "Y":
-        print("Which story would you like to read? [1-10]")
-        user_quantastory = input("")
-        user_quantastory = int(user_quantastory)
-        story_url_read = quanta_stories[user_quantastory - 1][1]
-        webbrowser.open(story_url_read)
-    else:
-        quanta_reading = False
-
-# Open all blogs that the use wants to read.
-blog_reading = True
-while blog_reading == True:
-
-    print("Would you like to read any of the blog entries? [Y/n]")
-    user_blogreading = input("")
-    if user_blogreading == "Y":
-        print("Which story would you like to read? [1-%d]" % number_of_blogs)
-        user_blog = input("")
-        user_blog = int(user_blog)
-        blog_url_read = new_blogs[user_blog-1][1]
-        webbrowser.open(blog_url_read)
-    else:
-        blog_reading = False
+        pass
+    # Move onto the next blog.
+    section_counter += 1
 
 # Close.
 print("\n" + " "*10 + "Now you are all up to date." + "\n\n")
