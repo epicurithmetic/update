@@ -2,8 +2,9 @@
 # that interest me.
 import os
 import time
-import webbrowser
+import sqlite3
 import requests
+import webbrowser
 from bs4 import BeautifulSoup
 
 # Generate the time in a user friendly format.
@@ -11,37 +12,249 @@ seconds = time.time()
 local_time = time.ctime(seconds)
 
 # Clear the terminal
-os.system("cls")
+# os.system("cls")        # Only works on microsoft machines.
+os.system("clear")        # Linux option.
 
 # Some simple graphics to frame the update.
 x = "|||"
 y = "-"                     # This could be decorated more with some simple
                             # cellular automata. Using a RNG we could provide
                             # a new graphic with each update.
-print(x + y*169 + x)        # Take from a list of "interesting rules" a random
-print(x + y*169 + x)        # rule to make things different each time.
+print(x + y*205 + x)        # Take from a list of "interesting rules" a random
+print(x + y*205 + x)        # rule to make things different each time.
 
 # Print the time
 print("Date: " + local_time)
 print(" ")
 
 # Reminders
-print(" "*55 + x + y*50 + x)
-print("\n" +  " "*60 + "Reminders: \n")
+print(" "*75 + x + y*50 + x)
+print("\n" +  " "*80 + "Reminders: \n")
 
-print(" "*70 + "1. Neck and back stretches")
-print(" "*70 + "2. Meditation with Sam Harris")
-print(" "*70 + "3. Two hours of coding")
+print(" "*90 + "1. Neck and back stretches")
+print(" "*90 + "2. Yoga with Adriene")
+print(" "*90 + "3. Meditation with Sam Harris")
+print(" "*90 + "4. Two hours of computer study")
 
 print("\n")
-print(" "*55 + x + y*50 + x)
+print(" "*75 + x + y*50 + x)
 print("\n")
 # Greeting
-print("Greetings Robert. \n")
-print("Your requested updates are as follows: \n")
+print(" "*20 + "Greetings Robert. \n")
+#print(" "*30 + "Your requested updates are as follows: \n")
+
+# Idea: print a poem of interest or quote to begin the update. Create a library
+#       of interesting things to print and pick at random when the script runs.
 
 
-print(" "*5 + "His Holiness, Jung, and Mythology: \n")
+# -----------------------------------------------------------------------------
+# ----------------- Here is the birthday reminder code ------------------------
+# -----------------------------------------------------------------------------
+# Enter the information from MAP database.
+# The next functions will allow us to determine whether today is someones
+# birthday, or a birthday will occur in the next week.
+def map_birthdays(conn):
+
+    sql_birthday = "SELECT first_name, last_name, dob FROM people;"
+
+    cur = conn.cursor()
+    cur.execute(sql_birthday)
+
+    birthdays_raw = cur.fetchall()
+
+    # Reformat the information.
+    birthdays = []
+    for entry in birthdays_raw:
+        # [First+Last,dob] format of information.
+        birthdays.append([entry[0]+ " " +entry[1],entry[2]])
+
+    return birthdays
+
+def present_day_month():
+
+    # Get local time.
+    seconds = time.time()
+    local_time = time.ctime(seconds)
+
+    # Both the current month and current day code could be written in their
+    # own functions. Perhaps this is better style?
+
+    # Get the current month:
+    month_word = local_time[4:7]
+    months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    month_number = str(months.index(month_word)+1)
+    if len(month_number) == 1:              # This if statement puts the month in
+        month_number = "0"+month_number     # the same format as that of the SQLite
+    else:                                   # database month data.
+        pass
+
+    # Get the current day:
+    day_raw = local_time[8:10]
+    day = ""
+    if day_raw[0] == " ":
+        day = "0" + day_raw[1]
+    else:
+        day = day_raw
+
+    today_date = day + "/" + month_number
+
+    return today_date
+
+def tse_ddmm(time_since_epoch):
+
+    """
+        This functions takes as input an int (str of int?) interpreting it
+        as time since epoch and outputs the corresponding date in a string
+        of the form: dd/mm (type str)
+
+    """
+
+    then_time = time.ctime(time_since_epoch)
+
+    # Get the current month:
+    month_word = then_time[4:7]
+    months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    month_number = str(months.index(month_word)+1)
+    if len(month_number) == 1:              # This if statement puts the month in
+        month_number = "0"+month_number     # the same format as that of the SQLite
+    else:                                   # database month data.
+        pass
+
+    # Get the current day:
+    day_raw = then_time[8:10]
+    day = ""
+    if day_raw[0] == " ":
+        # Time module documentation says there is a space buffer in the case
+        # the date is a single digit day. We change the space to a 0...
+        day = "0" + day_raw[1]
+    else:
+        # ... otherwise we do nothing.
+        day = day_raw
+
+    then_date = day + "/" + month_number
+
+    return then_date
+
+def whose_birthday_today(conn):
+
+    map_birthday_list = map_birthdays(conn)
+    l = len(map_birthday_list)
+    day_month = present_day_month()
+
+    # Aux list to store people whose birthday is today.
+    birthday_today = []
+    # Check birthdays against the database.
+    for i in range(0,l):
+
+        # Do the check person-by-person
+        if map_birthday_list[i][1][0:5] == day_month:
+            birthday_today.append(map_birthday_list[i][0])
+        else:
+            pass
+
+    return birthday_today
+
+def whose_birthday_week(conn):
+
+    map_birthday_list = map_birthdays(conn)
+    number_of_people = len(map_birthday_list)
+
+    # Get local time.
+    seconds_since_epoch = time.time()
+    local_time = time.ctime(seconds_since_epoch)
+    current_day = local_time[0:3]
+    days_of_week = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    days_since_monday = days_of_week.index(current_day)
+
+    # Seconds Since Epoch on the Monday of the present week.
+    monday_time = seconds_since_epoch - days_since_monday*24*60*60
+
+    # Now we want the date dd/mm for each day of the present week.
+    dates_for_week = []
+    for i in range(0,7):
+        dates_for_week.append(tse_ddmm(monday_time + i*24*60*60))
+
+    # Create a list to store the birthday information
+    birthday_info = []
+
+    # With the dates in hand, we can now check them against the MAP.db
+    for i in range(0,number_of_people):
+
+        # Check each person against each day of the week.
+        for j in range(0,7):
+
+            if map_birthday_list[i][1][0:5] == dates_for_week[j]:
+                # Append birthday person's name and the days since Monday
+                # i.e. the local variable j, on which the birthday falls.
+                birthday_info.append([map_birthday_list[i][0],j])
+            else:
+                pass
+
+
+    return birthday_info
+
+# Obtain the birthday information from the database.
+map_conn = sqlite3.connect("map.db")
+birth_day = whose_birthday_today(map_conn)
+l_day = len(birth_day)
+#print(l_day)
+birth_week = whose_birthday_week(map_conn)
+l_week = len(birth_week)
+#print(l_week)
+days_of_week_full = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+
+# Print the birthday information.
+print("\n\n")
+print(" "*3 + y*20 + " Birthday " + y*20)
+print(" "*3 + y*20 + " Reminder " + y*20)
+print("\n")
+
+if (l_day == 0) and (l_week == 0):
+    print(" "*5 + "Your friends and family do not have any\n" + " "*7 + "birthdays this week.")
+
+elif (l_day == 0) and (not(l_week == 0)):
+    print(" "*5 + "None of your friends or family have their" + "\n" + " "*7 + "birthday today.\n")
+    print(" "*5 + "However the following birthdays fall this week:\n")
+    for j in range(0,l_week):
+        print(" "*10 + "%s (%s)" % (birth_week[j][0],days_of_week_full[birth_week[j][1]]))
+
+elif (l_day == 1) and (l_week == 1):
+    print(" "*5 + ("Today is %s's birthday."% birth_day[0]) + "\n\n" + " "*5 + "This is the only birthday this week." )
+
+elif (l_day == 1) and (l_week >= 1):
+    print(" "*5 + ("Today is %s's birthday. \n" % birth_day[0]))
+    print(" "*5 + "The following birthdays fall during the week:\n")
+    for k in range(0,l_week):
+        print(" "*10 + "%s (%s)" % (birth_week[k][0],days_of_week_full[birth_week[k][1]]))
+
+elif (l_day == l_week):
+    print(" "*5 + "The following people have their birthday today:")
+    for i in range(0,l_day):
+        print(" "*10 + birth_day[j])
+    print(" "*5 + "These are the only birthdays that fall this week.")
+
+else:
+    # The remaining cases (today > 1 and week > 1 and today =/= week) can
+    # be handled in the final else statement.
+    print(" "*5 + "The following people have their birthday today:" + "\n")
+    for i in range(0,l_day):
+        print(" "*10 + birth_day[i])
+    print("\n" + " "*5 + "The following birthdays fall during the week:\n")
+    for k in range(0,l_week):
+        print(" "*10 + "%s (%s)" % (birth_week[k][0],days_of_week_full[birth_week[k][1]]))
+
+print("\n\n")
+print(" "*3 + y*50)
+print(" "*3 + y*50)
+print("\n")
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+# Create a visual marker of the change between personal information and blog
+# related information.
+
+print(" "*5 + "Inner cosmos blogs: \n")
 
 def HHtDL():
 
@@ -87,7 +300,41 @@ def myth_matters():
 
     return [title_blog, url_blog]
 
-newest_blogs = [["His Holiness the Dalai Lama", HHtDL()],["Jungianthology", jungianthology()],["Myth Matters", myth_matters()]]
+def jbp_blog():
+
+    url_jbp = "https://www.jordanbpeterson.com/"
+    response_jbp = requests.get(url_jbp)
+    soup_jbp = BeautifulSoup(response_jbp.text, "html.parser")
+
+    # Zero-in on the relevant information.
+    first_jbp = soup_jbp.find("h4")
+
+    title_jbp = first_jbp.find("a").text
+    blog_url_jbp = first_jbp.find("a")['href']
+
+    return [title_jbp, blog_url_jbp]
+
+
+def healing_psyche():
+
+    url_healing = "https://www.thehealingpsyche.org/blog"
+    response_healing = requests.get(url_healing)
+    soup_healing = BeautifulSoup(response_healing.text, "html.parser")
+
+    # Zero in on the relevant information.
+    blog_title_healing = soup_healing.find("h2").text
+    blog_title_healing = blog_title_healing[0] + blog_title_healing[1:].lower()   # This blog uses all CAPS, so this line cleans that up.
+    blog_url_healing_first = soup_healing.find("div", id="comp-j6k92uwy_MediaLeftPage_PhotoPost__0_0_0_0_def_7")
+    blog_url_healing = blog_url_healing_first.find("a")['href']
+
+    return [blog_title_healing,blog_url_healing]
+
+newest_blogs = [["Jordan B. Peterson", jbp_blog()],
+                ["His Holiness the Dalai Lama", HHtDL()],
+                ["Jungianthology", jungianthology()],
+                ["Myth Matters", myth_matters()],
+                ["Healing Pysche",healing_psyche()]]
+
 blog_count = 1
 for blog in newest_blogs:
     print(" "*10 + str(blog_count) + ". " + blog[0] + ": " + blog[1][0])
@@ -119,9 +366,14 @@ def RNZHeadlines():
     for story in main:
         headline = story.text
         link_data = story.find("a", class_="faux-link")
-        link = url_rnz[:-1] + link_data['href']
 
-        headlines.append([headline,link])
+        if not(link_data == None):
+            link = url_rnz[:-1] + link_data['href']
+            headlines.append([headline,link])
+        else:
+            pass
+
+        #headlines.append([headline,link])
 
 
     return headlines
@@ -197,7 +449,7 @@ print("\n")
 # Music updates bandcamp pages
 bandcamp_intro = "Latest releases from your favourite record labels and artists:"
 orbmag_intro = "Latest podcast and articles on Orbmag:"
-print(" "*5 + bandcamp_intro + " "*18 + orbmag_intro + "\n")
+print(" "*5 + bandcamp_intro + "\n")
 
 artist_list = ["Ultimae",
               "Synphaera",
@@ -205,11 +457,15 @@ artist_list = ["Ultimae",
               "White Label Records",
               "Carbon Based Lifeforms",
               "Hydrangea",
+              "Grand River",
               "Abul Mogard",
               "Faint",
               "Solar Fields",
               "Trentemoller",
-              "Alfa Mist"]
+              "Alfa Mist",
+              "Oddisee",
+              "Bruno Sanfilippo",
+              "1631 Recordings"]
 
 # Read in the data from the last time we checked.
 N = len(artist_list)
@@ -243,11 +499,15 @@ bandcamp_list = ["https://ultimae.bandcamp.com/",
                  "https://whitelabrecs.bandcamp.com/music",
                  "https://carbonbasedlifeforms.bandcamp.com/music",
                  "https://hydrangea.bandcamp.com/",
+                 "https://grandrivermusic.bandcamp.com/",
                  "https://abulmogard.bandcamp.com/",
                  "https://faintmusic.bandcamp.com/",
                  "https://solarfields.bandcamp.com/",
                  "https://trentemoller.bandcamp.com/",
-                 "https://alfamist.bandcamp.com/music"]
+                 "https://alfamist.bandcamp.com/music",
+                 "https://oddiseemmg.bandcamp.com/",
+                 "https://brunosanfilippo.bandcamp.com/",
+                 "https://1631recordings.bandcamp.com/"]
 
 # This function cleans the format of the scraped release_title.
 def release_name_clean(raw_release_name):
@@ -288,83 +548,78 @@ for url in bandcamp_list:
     newest_releases.append(clean_release_title)
 
 # I want to print the ambient blog and orbmag beside bandcamp list.
-def ambient_blog():
+# def ambient_blog():
+#
+#     url_ambient = "https://www.ambientblog.net/blog/"
+#     response_ambient = requests.get(url_ambient)
+#     soup_ambient = BeautifulSoup(response_ambient.text, "html.parser")
+#
+#     title_section = soup_ambient.find_all("h2", class_="entry-title", itemprop = "headline")
+#
+#     blog_entry_data = []
+#
+#     for entry in title_section:
+#         entry_info = entry.find("a")
+#         entry_title = entry_info.text
+#         entry_url = entry_info["href"]
+#
+#         blog_entry = [entry_title,entry_url]
+#         blog_entry_data.append(blog_entry)
+#
+#     return blog_entry_data
+#
+# def orbmag_podcast():
+#
+#     url_orbcast = "https://www.orbmag.com/music/"
+#     response_orbcast = requests.get(url_orbcast)
+#     soup_orbcast = BeautifulSoup(response_orbcast.text, "html.parser")
+#
+#     title_section = soup_orbcast.find("h3")
+#     orbcast_title = title_section.find("a").text
+#     orbcast_url = title_section.find("a")["href"]
+#
+#     return [orbcast_title,orbcast_url]
+#
+# def orbmag_news():
+#
+#     url_orbnews = "https://www.orbmag.com/news/"
+#     response_orbnews = requests.get(url_orbnews)
+#     soup_orbnews = BeautifulSoup(response_orbnews.text, "html.parser")
+#
+#     # Single out all of the new stories on the (first) news page.
+#     articles_orbnews = soup_orbnews.find_all("article")
+#
+#     # I don't want updates about "EVENTS". I only want "NEWS" articles.
+#     articles_just_orbnews = []
+#     for story in articles_orbnews:
+#         story_type = story.find("a").text
+#         if story_type ==  "News":
+#             articles_just_orbnews.append(story)
+#         else:
+#             pass
+#
+#     # Store the articles I am interested in here.
+#     article_data = []
+#
+#     # For each "NEWS" story I need to go ahead and get the title and URL.
+#     for story in articles_just_orbnews:
+#         story_data = story.find("h3").find("a")
+#         # Grab the relevant data.
+#         story_url = story_data["href"]
+#         story_title = story_data.text
+#         # Append the data to the list.
+#         article_data.append([story_title,story_url])
+#
+#     return article_data
 
-    url_ambient = "https://www.ambientblog.net/blog/"
-    response_ambient = requests.get(url_ambient)
-    soup_ambient = BeautifulSoup(response_ambient.text, "html.parser")
-
-    title_section = soup_ambient.find_all("h2", class_="entry-title", itemprop = "headline")
-
-    blog_entry_data = []
-
-    for entry in title_section:
-        entry_info = entry.find("a")
-        entry_title = entry_info.text
-        entry_url = entry_info["href"]
-
-        blog_entry = [entry_title,entry_url]
-        blog_entry_data.append(blog_entry)
-
-    return blog_entry_data
-
-def orbmag_podcast():
-
-    url_orbcast = "https://www.orbmag.com/music/"
-    response_orbcast = requests.get(url_orbcast)
-    soup_orbcast = BeautifulSoup(response_orbcast.text, "html.parser")
-
-    title_section = soup_orbcast.find("h3")
-    orbcast_title = title_section.find("a").text
-    orbcast_url = title_section.find("a")["href"]
-
-    return [orbcast_title,orbcast_url]
-
-def orbmag_news():
-
-    url_orbnews = "https://www.orbmag.com/news/"
-    response_orbnews = requests.get(url_orbnews)
-    soup_orbnews = BeautifulSoup(response_orbnews.text, "html.parser")
-
-    # Single out all of the new stories on the (first) news page.
-    articles_orbnews = soup_orbnews.find_all("article")
-
-    # I don't want updates about "EVENTS". I only want "NEWS" articles.
-    articles_just_orbnews = []
-    for story in articles_orbnews:
-        story_type = story.find("a").text
-        if story_type ==  "News":
-            articles_just_orbnews.append(story)
-        else:
-            pass
-
-    # Store the articles I am interested in here.
-    article_data = []
-
-    # For each "NEWS" story I need to go ahead and get the title and URL.
-    for story in articles_just_orbnews:
-        story_data = story.find("h3").find("a")
-        # Grab the relevant data.
-        story_url = story_data["href"]
-        story_title = story_data.text
-        # Append the data to the list.
-        article_data.append([story_title,story_url])
-
-    return article_data
-
-orbmag_data = [orbmag_podcast()] + orbmag_news()
-while len(orbmag_data) < N:
-    orbmag_data += [[""],[""]]
 # Print the most recent release titles. If a title has changed since the last
 # update, then indicate this with a [New!] printed next to the title.
 for i in range(0,N):
 
     if newest_releases[i] == bandcamp_old_release_data[i]:
-        l_bandcamp = len(artist_list[i] + ": "+ newest_releases[i])
-        print(" "*10 + artist_list[i] +": " + newest_releases[i] + " "*(80 - l_bandcamp) + orbmag_data[i][0])
+        print(" "*10 + artist_list[i] +": " + newest_releases[i])
     else:
-        l_bandcamp = len(artist_list[i] + ": "+ newest_releases[i] + " [New!]")
-        print(" "*10 + artist_list[i] +": " + newest_releases[i] + " [New!]" + " "*(80 - l_bandcamp) + orbmag_data[i][0])
+        print(" "*10 + artist_list[i] +": " + newest_releases[i] + " [New!]")
 
 # Now we can update the database with the new release information.
 file = open("bandcamp_database.txt","w")
@@ -385,7 +640,9 @@ file.close()
 print("\n")
 # Blog updates.
 
-blogs = ["Stephen Wolfram", "Joel David Hampkins", "Matt Baker", "Godel's Lost Letter", "Annoying Precision", "Full Stack Python"]
+blogs = ["Stephen Wolfram", "Joel David Hampkins", "Matt Baker",
+        "Godel's Lost Letter", "Annoying Precision", "Full Stack Python",
+        "The n-Category Cafe", "The Overflow", "Light Blue Touchpaper"]
 
 number_of_blogs = len(blogs)
 # First we write some function to grab the latest post each of the blogs.
@@ -429,18 +686,6 @@ def baker_headline():
     article_url = main_baker.a["href"]
 
     return [title_baker, article_url]
-
-# # Logic Matters
-# def logic_matters():
-#
-#     url_logic = "https://www.logicmatters.net/blogfront/"
-#     response_logic = requests.get(url_logic)
-#     soup_logic = BeautifulSoup(response_logic.text, "html.parser")
-#
-#     main_logic = soup_logic.find("h1", class_="entry-title")
-#     title_logic = main_logic.text
-#
-#     return title_logic
 
 # Godels lost letter
 def godel_letter():
@@ -491,8 +736,55 @@ def fullstack_python():
 
     return [blog_title, blog_link]
 
+# N-Cat lab.
+def ncat_blog():
+
+    url_ncat = "https://golem.ph.utexas.edu/category/"
+    partial_url_ncat = "https://golem.ph.utexas.edu"
+    response_ncat = requests.get(url_ncat)
+    soup_ncat = BeautifulSoup(response_ncat.text, "html.parser")
+
+    # Zero-in on the required information.
+    main_ncat = soup_ncat.find("div", class_="extended")
+
+    title_ncat = main_ncat.find("a").text
+    url_blog_ncat = partial_url_ncat + main_ncat.find("a")['href']
+
+    return [title_ncat, url_blog_ncat]
+
+# Stack exchange blog
+def stackoverflow_blog():
+
+    url_overflow = "https://stackoverflow.blog/newsletter/"
+    response_overflow = requests.get(url_overflow)
+    soup_overflow = BeautifulSoup(response_overflow.text, "html.parser")
+
+    # Zero-in on the required information.
+    main_overflow = soup_overflow.find("h2")
+
+    title_overflow = main_overflow.find("a")['title']
+    url_blog_overflow = main_overflow.find("a")['href']
+
+
+    return [title_overflow, url_blog_overflow]
+
+# CyberSec blog.
+def lbtouch():
+
+    url_lbt = "https://www.lightbluetouchpaper.org"
+    response_lbt = requests.get(url_lbt)
+    soup_lbt = BeautifulSoup(response_lbt.text, "html.parser")
+
+    main_lbt = soup_lbt.find("h1", class_="entry-title")
+    blog_title_lbt = main_lbt.find("a").text
+    blog_url_lbt = main_lbt.find("a")['href']
+
+    return [blog_title_lbt,blog_url_lbt]
+
 # These functions get the most recent blog titles.
-blogs_functions = [wolfram_writings(), jdh_headline(), baker_headline(),godel_letter(),annoying_precision(),fullstack_python()]
+blogs_functions = [wolfram_writings(), jdh_headline(), baker_headline(),
+                    godel_letter(),annoying_precision(),fullstack_python(),
+                    ncat_blog(),stackoverflow_blog(), lbtouch()]
 
 # Get the latest blog titles.
 new_blogs = []
@@ -551,7 +843,7 @@ reading_commands = ["Would you like to read any of the spiritual blogs? [Y/n]",
                     "Would you like to read any of the stories from Quanta Magazine? [Y/n]",
                     "Would you like to read any of the blog entries? [Y/n]"]
 
-article_numbers = ["[1-3]","[1-10]","[1-10]",("[1-%d]" % number_of_blogs)]
+article_numbers = ["[1-4]","[1-10]","[1-10]",("[1-%d]" % number_of_blogs)]
 
 blog_url_lists = [newest_blogs,rnz_stories,quanta_stories,new_blogs]
 length_blog_list = len(blog_url_lists)
