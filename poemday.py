@@ -53,6 +53,20 @@ def PotDPoem():
         poem_full += line.text +" \n"
 
 
-    return poem_full    [:-1]
+    return poem_full[:-1]
 
 # Task 2: Display the poem.
+def PrintPoem():
+
+    poem_author = PotDAuthor()
+    poem_title = PotDTitle()
+    poem_string = PotDPoem()
+    poem_lines = poem_string.split("\n\r")
+    spacing = 65
+
+    print("\n" + " "*(spacing) + poem_title + "\n")
+    for line in poem_lines[:-1]:
+        print(" "*spacing + line)
+    print("\n"+ " "*(spacing + 60) + "- " + poem_author)
+
+# Task 3: Determine whether or not to add the poem to the database of favourites.

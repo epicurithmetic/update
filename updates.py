@@ -7,6 +7,9 @@ import requests
 import webbrowser
 from bs4 import BeautifulSoup
 
+# This function is used to present a poem from the Poetry Foundation. 
+from poemday import PrintPoem
+
 # Generate the time in a user friendly format.
 seconds = time.time()
 local_time = time.ctime(seconds)
@@ -251,8 +254,15 @@ print("\n")
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-# Create a visual marker of the change between personal information and blog
-# related information.
+# This small part of the script presents the Poem of the Day from the Poetry Foundation.
+print("\n\n")
+print(" "*60 + x + y*85 + x)
+print(" "*60 + x + y*85 + x)
+print("\n")
+print(" "*88 +"Poetry Foundation: Poem of the Day")
+print("\n")
+PrintPoem()
+
 
 print(" "*5 + "Inner cosmos blogs: \n")
 
