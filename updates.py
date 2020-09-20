@@ -7,7 +7,7 @@ import requests
 import webbrowser
 from bs4 import BeautifulSoup
 
-# This function is used to present a poem from the Poetry Foundation. 
+# This function is used to present a poem from the Poetry Foundation.
 from poemday import PrintPoem
 
 # Generate the time in a user friendly format.
@@ -556,6 +556,7 @@ for url in bandcamp_list:
     raw_release_title = bandcamp_latest_release(url)
     clean_release_title = release_name_clean(raw_release_title)
     newest_releases.append(clean_release_title)
+    time.sleep(1)
 
 # I want to print the ambient blog and orbmag beside bandcamp list.
 # def ambient_blog():
@@ -800,6 +801,7 @@ blogs_functions = [wolfram_writings(), jdh_headline(), baker_headline(),
 new_blogs = []
 for blog in blogs_functions:
     new_blogs.append(blog)
+    time.sleep(1)
 
 # Read in the data from the last time we checked the blog.
 blogs_in_database = []
